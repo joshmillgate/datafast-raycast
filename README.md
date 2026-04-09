@@ -18,8 +18,6 @@ View your Datafast web analytics in Raycast.
 
 **Enable Menu Bar** – Show the number of active visitors in your Mac menu bar, updated every minute. Also detects new sales and celebrates with confetti.
 
-**Open Realtime Map** – Opens the Datafast realtime map in your browser.
-
 ## Getting Started
 
 ### Get Your Datafast API Key
@@ -29,15 +27,9 @@ View your Datafast web analytics in Raycast.
 3. Open the **API** tab
 4. Generate a new API key and copy it
 
-### Get Your Dashboard ID (Optional)
-
-1. Open your Datafast dashboard in a browser
-2. Copy the ID from the URL: `https://datafa.st/dashboard/{YOUR_DASHBOARD_ID}`
-3. This is needed for the "Open Realtime Map" command
-
 ### Add Details to Raycast Extension
 
 1. Open Raycast and search for any Datafast command
 2. Enter your **API Key** when prompted
-3. Optionally set your **Dashboard ID** and **Timezone** in extension settings
+3. Optionally set your **Timezone** in extension settings
 4. You're all set!

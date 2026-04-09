@@ -1,7 +1,6 @@
 export interface Preferences {
   apiKey: string;
   timezone?: string;
-  dashboardId?: string;
 }
 
 export interface ApiSuccessResponse<T> {

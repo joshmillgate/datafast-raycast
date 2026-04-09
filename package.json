@@ -25,14 +25,6 @@
       "title": "Timezone",
       "description": "IANA timezone (e.g. America/New_York). Defaults to system timezone.",
       "placeholder": "America/New_York"
-    },
-    {
-      "name": "dashboardId",
-      "type": "textfield",
-      "required": false,
-      "title": "Dashboard ID",
-      "description": "Your Datafast dashboard ID (from your dashboard URL)",
-      "placeholder": "69cbfe3de8e418f9bf0aaddc"
     }
   ],
   "commands": [
@@ -91,14 +83,6 @@
       "description": "Show live visitor count in your menu bar",
       "mode": "menu-bar",
       "interval": "1m"
-    },
-    {
-      "name": "open-realtime-map",
-      "title": "Open Realtime Map",
-      "subtitle": "Open Datafast realtime map in the browser",
-      "description": "Open the Datafast realtime map in your browser",
-      "mode": "no-view",
-      "keywords": ["map", "realtime", "live"]
     }
   ],
   "dependencies": {
