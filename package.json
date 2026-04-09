@@ -82,7 +82,8 @@
       "subtitle": "Show number of active visitors in the Mac menu bar",
       "description": "Show live visitor count in your menu bar",
       "mode": "menu-bar",
-      "interval": "1m"
+      "interval": "1m",
+      "keywords": ["visitors", "realtime", "menu bar", "live"]
     }
   ],
   "dependencies": {

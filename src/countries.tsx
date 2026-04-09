@@ -1,7 +1,19 @@
 import { useMemo } from "react";
-import { List, ActionPanel, Action, Icon } from "@raycast/api";
+import {
+  List,
+  ActionPanel,
+  Action,
+  Icon,
+  Keyboard,
+  openExtensionPreferences,
+} from "@raycast/api";
 import { useCachedPromise } from "@raycast/utils";
-import { fetchCountries, fetchRegions, fetchCities } from "./lib/api";
+import {
+  fetchCountries,
+  fetchRegions,
+  fetchCities,
+  fetchMetadata,
+} from "./lib/api";
 import { useDateRange } from "./lib/date-ranges";
 import { DateRangeParams } from "./lib/types";
 import { formatNumber, formatCurrency } from "./lib/format";
@@ -9,9 +21,11 @@ import { formatNumber, formatCurrency } from "./lib/format";
 function CountryDetail({
   country,
   range,
+  currency,
 }: {
   country: string;
   range: DateRangeParams;
+  currency: string;
 }) {
   const regionParams = useMemo(
     () => ({ ...range, country, limit: 50 }),
@@ -45,16 +59,28 @@ function CountryDetail({
                 {
                   text: `${formatNumber(r.visitors)} visitors`,
                   icon: Icon.Person,
+                  tooltip: "Total unique visitors",
                 },
                 ...(r.revenue > 0
                   ? [
                       {
-                        text: formatCurrency(r.revenue, "USD"),
+                        text: formatCurrency(r.revenue, currency),
                         icon: Icon.BankNote,
+                        tooltip: "Total revenue",
                       },
                     ]
                   : []),
               ]}
+              actions={
+                <ActionPanel>
+                  <Action.CopyToClipboard
+                    title="Copy Region"
+                    icon={Icon.Clipboard}
+                    shortcut={Keyboard.Shortcut.Common.Copy}
+                    content={r.region || "Unknown"}
+                  />
+                </ActionPanel>
+              }
             />
           ))}
         </List.Section>
@@ -70,16 +96,28 @@ function CountryDetail({
                 {
                   text: `${formatNumber(c.visitors)} visitors`,
                   icon: Icon.Person,
+                  tooltip: "Total unique visitors",
                 },
                 ...(c.revenue > 0
                   ? [
                       {
-                        text: formatCurrency(c.revenue, "USD"),
+                        text: formatCurrency(c.revenue, currency),
                         icon: Icon.BankNote,
+                        tooltip: "Total revenue",
                       },
                     ]
                   : []),
               ]}
+              actions={
+                <ActionPanel>
+                  <Action.CopyToClipboard
+                    title="Copy City"
+                    icon={Icon.Clipboard}
+                    shortcut={Keyboard.Shortcut.Common.Copy}
+                    content={c.city || "Unknown"}
+                  />
+                </ActionPanel>
+              }
             />
           ))}
         </List.Section>
@@ -96,7 +134,9 @@ export default function Countries() {
     keepPreviousData: true,
     failureToastOptions: { title: "Failed to load countries" },
   });
+  const { data: metadata } = useCachedPromise(fetchMetadata, []);
 
+  const currency = metadata?.currency || "USD";
   const countries = data || [];
 
   return (
@@ -116,12 +156,14 @@ export default function Countries() {
               {
                 text: `${formatNumber(c.visitors)} visitors`,
                 icon: Icon.Person,
+                tooltip: "Total unique visitors",
               },
               ...(c.revenue > 0
                 ? [
                     {
-                      text: formatCurrency(c.revenue, "USD"),
+                      text: formatCurrency(c.revenue, currency),
                       icon: Icon.BankNote,
+                      tooltip: "Total revenue",
                     },
                   ]
                 : []),
@@ -131,16 +173,24 @@ export default function Countries() {
                 <Action.Push
                   title="View Regions & Cities"
                   icon={Icon.Map}
-                  target={<CountryDetail country={c.country} range={range} />}
+                  target={
+                    <CountryDetail
+                      country={c.country}
+                      range={range}
+                      currency={currency}
+                    />
+                  }
                 />
                 <Action.CopyToClipboard
                   title="Copy Country"
                   icon={Icon.Clipboard}
+                  shortcut={Keyboard.Shortcut.Common.Copy}
                   content={c.country}
                 />
                 <Action.OpenInBrowser
                   title="Open Datafast Dashboard"
                   icon={Icon.ArrowRight}
+                  shortcut={{ modifiers: ["cmd"], key: "o" }}
                   url="https://datafa.st"
                 />
               </ActionPanel>
@@ -153,6 +203,15 @@ export default function Countries() {
           title="No Country Data"
           description="Try a different date range"
           icon={Icon.Globe}
+          actions={
+            <ActionPanel>
+              <Action
+                title="Open Extension Preferences"
+                icon={Icon.Gear}
+                onAction={openExtensionPreferences}
+              />
+            </ActionPanel>
+          }
         />
       )}
     </List>

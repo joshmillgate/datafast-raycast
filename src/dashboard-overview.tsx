@@ -4,6 +4,7 @@ import {
   Action,
   Color,
   Icon,
+  Keyboard,
   updateCommandMetadata,
   openExtensionPreferences,
 } from "@raycast/api";
@@ -160,23 +161,28 @@ export default function DashboardOverview() {
           icon={m.icon}
           accessories={[
             { text: { value: m.value, color: Color.PrimaryText } },
-            ...(m.trend ? [m.trend] : []),
+            ...(m.trend
+              ? [{ ...m.trend, tooltip: "vs. previous period" }]
+              : []),
           ]}
           actions={
             <ActionPanel>
               <Action.CopyToClipboard
                 title={`Copy ${m.label}`}
                 icon={Icon.Clipboard}
+                shortcut={Keyboard.Shortcut.Common.Copy}
                 content={m.value}
               />
               <Action.OpenInBrowser
                 title="Open Datafast Dashboard"
                 icon={Icon.Globe}
+                shortcut={{ modifiers: ["cmd"], key: "o" }}
                 url="https://datafa.st"
               />
               <Action
                 title="Extension Preferences"
                 icon={Icon.Gear}
+                shortcut={{ modifiers: ["cmd"], key: "," }}
                 onAction={openExtensionPreferences}
               />
             </ActionPanel>

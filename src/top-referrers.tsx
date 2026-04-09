@@ -1,7 +1,14 @@
 import { useMemo } from "react";
-import { List, ActionPanel, Action, Icon } from "@raycast/api";
-import { useCachedPromise } from "@raycast/utils";
-import { fetchReferrers } from "./lib/api";
+import {
+  List,
+  ActionPanel,
+  Action,
+  Icon,
+  Keyboard,
+  openExtensionPreferences,
+} from "@raycast/api";
+import { useCachedPromise, getFavicon } from "@raycast/utils";
+import { fetchReferrers, fetchMetadata } from "./lib/api";
 import { useDateRange } from "./lib/date-ranges";
 import { formatNumber, formatCurrency } from "./lib/format";
 
@@ -13,7 +20,9 @@ export default function TopReferrers() {
     keepPreviousData: true,
     failureToastOptions: { title: "Failed to load referrers" },
   });
+  const { data: metadata } = useCachedPromise(fetchMetadata, []);
 
+  const currency = metadata?.currency || "USD";
   const referrers = data || [];
 
   return (
@@ -25,26 +34,31 @@ export default function TopReferrers() {
       <List.Section title={`${referrers.length} Referrers`}>
         {referrers.map((ref, i) => {
           const domain = ref.referrer || "Direct";
-          const faviconUrl = ref.referrer
-            ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(ref.referrer)}&sz=64`
-            : undefined;
 
           return (
             <List.Item
               key={`${domain}-${i}`}
               title={domain}
-              icon={faviconUrl ? { source: faviconUrl } : Icon.Link}
+              icon={
+                ref.referrer
+                  ? getFavicon(`https://${ref.referrer}`, {
+                      fallback: Icon.Link,
+                    })
+                  : Icon.Link
+              }
               keywords={[domain]}
               accessories={[
                 {
                   text: `${formatNumber(ref.visitors)} visitors`,
                   icon: Icon.Person,
+                  tooltip: "Total unique visitors",
                 },
                 ...(ref.revenue > 0
                   ? [
                       {
-                        text: formatCurrency(ref.revenue, "USD"),
+                        text: formatCurrency(ref.revenue, currency),
                         icon: Icon.BankNote,
+                        tooltip: "Total revenue",
                       },
                     ]
                   : []),
@@ -61,11 +75,13 @@ export default function TopReferrers() {
                   <Action.CopyToClipboard
                     title="Copy Referrer"
                     icon={Icon.Clipboard}
+                    shortcut={Keyboard.Shortcut.Common.Copy}
                     content={domain}
                   />
                   <Action.OpenInBrowser
                     title="Open Datafast Dashboard"
                     icon={Icon.ArrowRight}
+                    shortcut={{ modifiers: ["cmd"], key: "o" }}
                     url="https://datafa.st"
                   />
                 </ActionPanel>
@@ -79,6 +95,15 @@ export default function TopReferrers() {
           title="No Referrers Found"
           description="Try a different date range"
           icon={Icon.Link}
+          actions={
+            <ActionPanel>
+              <Action
+                title="Open Extension Preferences"
+                icon={Icon.Gear}
+                onAction={openExtensionPreferences}
+              />
+            </ActionPanel>
+          }
         />
       )}
     </List>

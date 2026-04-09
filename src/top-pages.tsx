@@ -1,7 +1,14 @@
 import { useMemo } from "react";
-import { List, ActionPanel, Action, Icon } from "@raycast/api";
+import {
+  List,
+  ActionPanel,
+  Action,
+  Icon,
+  Keyboard,
+  openExtensionPreferences,
+} from "@raycast/api";
 import { useCachedPromise } from "@raycast/utils";
-import { fetchPages } from "./lib/api";
+import { fetchPages, fetchMetadata } from "./lib/api";
 import { useDateRange } from "./lib/date-ranges";
 import { formatNumber, formatCurrency } from "./lib/format";
 
@@ -13,7 +20,9 @@ export default function TopPages() {
     keepPreviousData: true,
     failureToastOptions: { title: "Failed to load pages" },
   });
+  const { data: metadata } = useCachedPromise(fetchMetadata, []);
 
+  const currency = metadata?.currency || "USD";
   const pages = data || [];
 
   return (
@@ -34,12 +43,14 @@ export default function TopPages() {
               {
                 text: `${formatNumber(page.visitors)} visitors`,
                 icon: Icon.Person,
+                tooltip: "Total unique visitors",
               },
               ...(page.revenue > 0
                 ? [
                     {
-                      text: formatCurrency(page.revenue, "USD"),
+                      text: formatCurrency(page.revenue, currency),
                       icon: Icon.BankNote,
+                      tooltip: "Total revenue",
                     },
                   ]
                 : []),
@@ -54,11 +65,13 @@ export default function TopPages() {
                 <Action.CopyToClipboard
                   title="Copy URL"
                   icon={Icon.Clipboard}
+                  shortcut={Keyboard.Shortcut.Common.Copy}
                   content={`https://${page.hostname}${page.path}`}
                 />
                 <Action.OpenInBrowser
                   title="Open Datafast Dashboard"
                   icon={Icon.ArrowRight}
+                  shortcut={{ modifiers: ["cmd"], key: "o" }}
                   url="https://datafa.st"
                 />
               </ActionPanel>
@@ -71,6 +84,15 @@ export default function TopPages() {
           title="No Pages Found"
           description="Try a different date range"
           icon={Icon.Document}
+          actions={
+            <ActionPanel>
+              <Action
+                title="Open Extension Preferences"
+                icon={Icon.Gear}
+                onAction={openExtensionPreferences}
+              />
+            </ActionPanel>
+          }
         />
       )}
     </List>

@@ -70,6 +70,7 @@ export default function MenuBarRealtime() {
     <MenuBarExtra
       icon="menubar-icon.svg"
       title={data ? formatCompact(count) : undefined}
+      tooltip="Datafast — Active Visitors"
       isLoading={isLoading}
     >
       <MenuBarExtra.Section title="Active Visitors">
@@ -84,6 +85,7 @@ export default function MenuBarRealtime() {
         <MenuBarExtra.Item
           title="View Realtime Details"
           icon={Icon.Eye}
+          shortcut={{ modifiers: ["cmd"], key: "r" }}
           onAction={() =>
             launchCommand({
               name: "realtime-visitors",
@@ -94,6 +96,7 @@ export default function MenuBarRealtime() {
         <MenuBarExtra.Item
           title="Open Dashboard"
           icon={Icon.Globe}
+          shortcut={{ modifiers: ["cmd"], key: "o" }}
           onAction={() => open("https://datafa.st")}
         />
       </MenuBarExtra.Section>

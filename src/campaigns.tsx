@@ -1,7 +1,14 @@
 import { useMemo } from "react";
-import { List, ActionPanel, Action, Icon } from "@raycast/api";
+import {
+  List,
+  ActionPanel,
+  Action,
+  Icon,
+  Keyboard,
+  openExtensionPreferences,
+} from "@raycast/api";
 import { useCachedPromise } from "@raycast/utils";
-import { fetchCampaigns } from "./lib/api";
+import { fetchCampaigns, fetchMetadata } from "./lib/api";
 import { useDateRange } from "./lib/date-ranges";
 import { CampaignData } from "./lib/types";
 import { formatNumber, formatCurrency } from "./lib/format";
@@ -31,7 +38,13 @@ function sourceIcon(source: string): Icon {
   return Icon.Megaphone;
 }
 
-function CampaignDetailMetadata({ campaign }: { campaign: CampaignData }) {
+function CampaignDetailMetadata({
+  campaign,
+  currency,
+}: {
+  campaign: CampaignData;
+  currency: string;
+}) {
   const c = campaign.campaign;
   return (
     <List.Item.Detail
@@ -44,7 +57,7 @@ function CampaignDetailMetadata({ campaign }: { campaign: CampaignData }) {
           />
           <List.Item.Detail.Metadata.Label
             title="Revenue"
-            text={formatCurrency(campaign.revenue, "USD")}
+            text={formatCurrency(campaign.revenue, currency)}
             icon={Icon.BankNote}
           />
           <List.Item.Detail.Metadata.Separator />
@@ -101,7 +114,9 @@ export default function Campaigns() {
     keepPreviousData: true,
     failureToastOptions: { title: "Failed to load campaigns" },
   });
+  const { data: metadata } = useCachedPromise(fetchMetadata, []);
 
+  const currency = metadata?.currency || "USD";
   const campaigns = data || [];
 
   const grouped = new Map<string, CampaignData[]>();
@@ -137,17 +152,21 @@ export default function Campaigns() {
                   text: `${formatNumber(c.visitors)}`,
                 },
               ]}
-              detail={<CampaignDetailMetadata campaign={c} />}
+              detail={
+                <CampaignDetailMetadata campaign={c} currency={currency} />
+              }
               actions={
                 <ActionPanel>
                   <Action.CopyToClipboard
                     title="Copy Campaign Name"
                     icon={Icon.Clipboard}
+                    shortcut={Keyboard.Shortcut.Common.Copy}
                     content={getCampaignLabel(c)}
                   />
                   <Action.OpenInBrowser
                     title="Open Datafast Dashboard"
                     icon={Icon.ArrowRight}
+                    shortcut={{ modifiers: ["cmd"], key: "o" }}
                     url="https://datafa.st"
                   />
                 </ActionPanel>
@@ -161,6 +180,15 @@ export default function Campaigns() {
           title="No Campaigns Found"
           description="Try a different date range"
           icon={Icon.Megaphone}
+          actions={
+            <ActionPanel>
+              <Action
+                title="Open Extension Preferences"
+                icon={Icon.Gear}
+                onAction={openExtensionPreferences}
+              />
+            </ActionPanel>
+          }
         />
       )}
     </List>

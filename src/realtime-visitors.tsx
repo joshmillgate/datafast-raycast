@@ -1,4 +1,4 @@
-import { List, ActionPanel, Action, Icon, Color } from "@raycast/api";
+import { List, ActionPanel, Action, Icon, Color, Keyboard } from "@raycast/api";
 import { useCachedPromise } from "@raycast/utils";
 import { fetchRealtime, fetchRealtimeMap } from "./lib/api";
 import { RealtimeMapVisitor } from "./lib/types";
@@ -167,11 +167,13 @@ export default function RealtimeVisitors() {
                   <Action.CopyToClipboard
                     title="Copy Page URL"
                     icon={Icon.Clipboard}
+                    shortcut={Keyboard.Shortcut.Common.Copy}
                     content={v.currentUrl || ""}
                   />
                   <Action.OpenInBrowser
                     title="Open Datafast Dashboard"
                     icon={Icon.Globe}
+                    shortcut={{ modifiers: ["cmd"], key: "o" }}
                     url="https://datafa.st"
                   />
                 </ActionPanel>
@@ -218,6 +220,15 @@ export default function RealtimeVisitors() {
                   }
                 />
               }
+              actions={
+                <ActionPanel>
+                  <Action.CopyToClipboard
+                    title="Copy Path"
+                    icon={Icon.Clipboard}
+                    content={e.path || "/"}
+                  />
+                </ActionPanel>
+              }
             />
           ))}
         </List.Section>
@@ -253,6 +264,15 @@ export default function RealtimeVisitors() {
                     </List.Item.Detail.Metadata>
                   }
                 />
+              }
+              actions={
+                <ActionPanel>
+                  <Action.CopyToClipboard
+                    title="Copy Amount"
+                    icon={Icon.Clipboard}
+                    content={`${p.currency || "$"}${p.amount ?? 0}`}
+                  />
+                </ActionPanel>
               }
             />
           ))}

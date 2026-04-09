@@ -200,6 +200,7 @@ export function useDateRange(defaultKey: DateRangeKey = "30d") {
   const dropdown = (
     <List.Dropdown
       tooltip="Date Range"
+      storeValue
       value={rangeKey}
       onChange={(v) => setRangeKey(v as DateRangeKey)}
     >
