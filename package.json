@@ -5,7 +5,7 @@
   "description": "View your Datafast web analytics — visitors, revenue, pages, referrers, campaigns, and real-time data",
   "icon": "icon.png",
   "author": "joshmillgate",
-  "categories": ["Data"],
+  "categories": ["Data", "Web", "Productivity"],
   "license": "MIT",
   "platforms": ["macOS"],
   "keywords": ["analytics", "datafast", "revenue", "visitors", "web analytics"],
