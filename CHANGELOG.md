@@ -1,5 +1,11 @@
 # Datafast Changelog
 
+## [Update] - {PR_MERGE_DATE}
+
+- Remove inaccurate session time metric from Dashboard Overview
+- Remove unused `formatDuration` function
+- Add preference to disable sale notifications
+
 ## [Initial Version] - {PR_MERGE_DATE}
 
 - Dashboard Overview with KPI metrics and period-over-period trend comparison

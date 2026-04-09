@@ -34,7 +34,6 @@ export function formatPercentage(n: number | undefined | null): string {
   return `${(n ?? 0).toFixed(1)}%`;
 }
 
-
 export function formatCompact(n: number | undefined | null): string {
   const val = n ?? 0;
   if (val < 1000) return String(val);
