@@ -9,17 +9,17 @@ import {
   environment,
   updateCommandMetadata,
 } from "@raycast/api";
-import { usePromise } from "@raycast/utils";
+import { useCachedPromise } from "@raycast/utils";
 import { useEffect } from "react";
-import { fetchRealtime, fetchRealtimeMap } from "./lib/api";
+import { fetchRealtimeMap } from "./lib/api";
 import { formatNumber, formatCompact } from "./lib/format";
 
 const LAST_SEEN_KEY = "last-seen-payment-timestamps";
 
-async function checkForNewSales() {
+async function checkForNewSales(
+  payments: Array<{ amount: number; currency: string; timestamp: string }>,
+) {
   try {
-    const mapData = await fetchRealtimeMap();
-    const payments = mapData?.recentPayments || [];
     if (payments.length === 0) return;
 
     const storedRaw = await LocalStorage.getItem<string>(LAST_SEEN_KEY);
@@ -30,7 +30,6 @@ async function checkForNewSales() {
       return !seenSet.has(key);
     });
 
-    // Always update seen set
     const allKeys = payments.map(
       (p) => `${p.timestamp}-${p.amount}-${p.currency}`,
     );
@@ -56,25 +55,27 @@ async function checkForNewSales() {
 }
 
 export default function MenuBarRealtime() {
-  const { data, isLoading } = usePromise(fetchRealtime);
+  const { data, isLoading } = useCachedPromise(fetchRealtimeMap, []);
+
+  const count = data?.count ?? data?.visitors?.length ?? 0;
 
   useEffect(() => {
-    checkForNewSales();
+    if (data?.recentPayments) {
+      checkForNewSales(data.recentPayments);
+    }
     updateCommandMetadata({ subtitle: null });
-  }, []);
+  }, [data]);
 
   return (
     <MenuBarExtra
       icon="menubar-icon.svg"
-      title={data ? formatCompact(data.visitors) : undefined}
+      title={data ? formatCompact(count) : undefined}
       isLoading={isLoading}
     >
       <MenuBarExtra.Section title="Active Visitors">
         <MenuBarExtra.Item
           title={
-            data
-              ? `${formatNumber(data.visitors)} visitors right now`
-              : "Loading..."
+            data ? `${formatNumber(count)} visitors right now` : "Loading..."
           }
           icon={Icon.Person}
         />

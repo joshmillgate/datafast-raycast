@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { List, ActionPanel, Action, Icon } from "@raycast/api";
-import { usePromise } from "@raycast/utils";
+import { useCachedPromise } from "@raycast/utils";
 import { fetchReferrers } from "./lib/api";
 import { useDateRange } from "./lib/date-ranges";
 import { formatNumber, formatCurrency } from "./lib/format";
@@ -9,7 +9,10 @@ export default function TopReferrers() {
   const { range, dropdown } = useDateRange("30d");
   const params = useMemo(() => ({ ...range, limit: 100 }), [range]);
 
-  const { data, isLoading } = usePromise(fetchReferrers, [params]);
+  const { data, isLoading } = useCachedPromise(fetchReferrers, [params], {
+    keepPreviousData: true,
+    failureToastOptions: { title: "Failed to load referrers" },
+  });
 
   const referrers = data || [];
 

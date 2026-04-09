@@ -1,8 +1,3 @@
-export interface Preferences {
-  apiKey: string;
-  timezone?: string;
-}
-
 export interface ApiSuccessResponse<T> {
   status: "success";
   data: T;

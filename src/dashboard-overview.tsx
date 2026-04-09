@@ -5,9 +5,10 @@ import {
   Color,
   Icon,
   updateCommandMetadata,
+  openExtensionPreferences,
 } from "@raycast/api";
-import { usePromise } from "@raycast/utils";
-import { useMemo, useEffect } from "react";
+import { useCachedPromise } from "@raycast/utils";
+import { useEffect } from "react";
 import { fetchOverview, fetchRealtime, fetchMetadata } from "./lib/api";
 import { useDateRange } from "./lib/date-ranges";
 import {
@@ -21,18 +22,28 @@ import {
 export default function DashboardOverview() {
   const { range, previousRange, dropdown } = useDateRange("today");
 
-  const { data: current, isLoading: loadingCurrent } = usePromise(
+  const { data: current, isLoading: loadingCurrent } = useCachedPromise(
     fetchOverview,
     [range],
+    {
+      keepPreviousData: true,
+      failureToastOptions: { title: "Failed to load overview" },
+    },
   );
-  const prevParams = useMemo(() => previousRange, [previousRange]);
-  const { data: previous, isLoading: loadingPrevious } = usePromise(
+  const { data: previous, isLoading: loadingPrevious } = useCachedPromise(
     fetchOverview,
-    [prevParams],
+    [previousRange],
+    {
+      keepPreviousData: true,
+      failureToastOptions: { title: "Failed to load comparison data" },
+    },
   );
-  const { data: realtime, isLoading: loadingRealtime } =
-    usePromise(fetchRealtime);
-  const { data: metadata } = usePromise(fetchMetadata);
+  const { data: realtime, isLoading: loadingRealtime } = useCachedPromise(
+    fetchRealtime,
+    [],
+    { failureToastOptions: { title: "Failed to load realtime data" } },
+  );
+  const { data: metadata } = useCachedPromise(fetchMetadata, []);
 
   const isLoading = loadingCurrent || loadingPrevious || loadingRealtime;
 
@@ -163,6 +174,11 @@ export default function DashboardOverview() {
                 icon={Icon.Globe}
                 url="https://datafa.st"
               />
+              <Action
+                title="Extension Preferences"
+                icon={Icon.Gear}
+                onAction={openExtensionPreferences}
+              />
             </ActionPanel>
           }
         />
@@ -172,6 +188,15 @@ export default function DashboardOverview() {
           title="No Data Available"
           description="Check your API key and try again"
           icon={Icon.Warning}
+          actions={
+            <ActionPanel>
+              <Action
+                title="Open Extension Preferences"
+                icon={Icon.Gear}
+                onAction={openExtensionPreferences}
+              />
+            </ActionPanel>
+          }
         />
       )}
     </List>

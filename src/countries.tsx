@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { List, ActionPanel, Action, Icon } from "@raycast/api";
-import { usePromise } from "@raycast/utils";
+import { useCachedPromise } from "@raycast/utils";
 import { fetchCountries, fetchRegions, fetchCities } from "./lib/api";
 import { useDateRange } from "./lib/date-ranges";
 import { DateRangeParams } from "./lib/types";
@@ -21,13 +21,16 @@ function CountryDetail({
     () => ({ ...range, country, limit: 50 }),
     [range, country],
   );
-  const { data: regions, isLoading: loadingRegions } = usePromise(
+  const { data: regions, isLoading: loadingRegions } = useCachedPromise(
     fetchRegions,
     [regionParams],
+    { failureToastOptions: { title: "Failed to load regions" } },
   );
-  const { data: cities, isLoading: loadingCities } = usePromise(fetchCities, [
-    cityParams,
-  ]);
+  const { data: cities, isLoading: loadingCities } = useCachedPromise(
+    fetchCities,
+    [cityParams],
+    { failureToastOptions: { title: "Failed to load cities" } },
+  );
 
   return (
     <List isLoading={loadingRegions || loadingCities} navigationTitle={country}>
@@ -89,7 +92,10 @@ export default function Countries() {
   const { range, dropdown } = useDateRange("30d");
 
   const params = useMemo(() => ({ ...range, limit: 100 }), [range]);
-  const { data, isLoading } = usePromise(fetchCountries, [params]);
+  const { data, isLoading } = useCachedPromise(fetchCountries, [params], {
+    keepPreviousData: true,
+    failureToastOptions: { title: "Failed to load countries" },
+  });
 
   const countries = data || [];
 

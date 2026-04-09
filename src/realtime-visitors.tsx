@@ -1,5 +1,5 @@
-import { List, ActionPanel, Action, Icon, Detail, Color } from "@raycast/api";
-import { usePromise } from "@raycast/utils";
+import { List, ActionPanel, Action, Icon, Color } from "@raycast/api";
+import { useCachedPromise } from "@raycast/utils";
 import { fetchRealtime, fetchRealtimeMap } from "./lib/api";
 import { RealtimeMapVisitor } from "./lib/types";
 import { formatNumber } from "./lib/format";
@@ -26,7 +26,7 @@ function conversionColor(score: number): Color {
   return Color.SecondaryText;
 }
 
-function VisitorDetail({ visitor }: { visitor: RealtimeMapVisitor }) {
+function VisitorDetailMetadata({ visitor }: { visitor: RealtimeMapVisitor }) {
   const loc = visitor.location;
   const sys = visitor.system;
   const score = visitor.conversionLikelihood?.score;
@@ -37,97 +37,90 @@ function VisitorDetail({ visitor }: { visitor: RealtimeMapVisitor }) {
     "Unknown";
 
   return (
-    <Detail
-      markdown={`# Visitor from ${visitorLocation(visitor)}
-
-**Current Page:** ${visitor.currentUrl || "/"}
-
-**Referrer:** ${visitor.referrer || "Direct"}
-
-**Session started:** ${visitor.sessionStartTime ? new Date(visitor.sessionStartTime).toLocaleTimeString() : "Unknown"}`}
+    <List.Item.Detail
       metadata={
-        <Detail.Metadata>
-          <Detail.Metadata.Label
+        <List.Item.Detail.Metadata>
+          <List.Item.Detail.Metadata.Label
             title="Location"
             text={locationStr}
             icon={Icon.Pin}
           />
-          <Detail.Metadata.Label
+          <List.Item.Detail.Metadata.Label
             title="Device"
             text={sys?.device?.type || "Unknown"}
             icon={deviceIcon(sys?.device?.type)}
           />
-          <Detail.Metadata.Label
+          <List.Item.Detail.Metadata.Label
             title="Browser"
             text={sys?.browser?.name || "Unknown"}
             icon={Icon.Globe}
           />
-          <Detail.Metadata.Label
+          <List.Item.Detail.Metadata.Label
             title="OS"
             text={sys?.os?.name || "Unknown"}
             icon={Icon.ComputerChip}
           />
-          <Detail.Metadata.Separator />
-          <Detail.Metadata.Label
+          <List.Item.Detail.Metadata.Separator />
+          <List.Item.Detail.Metadata.Label
             title="Current Page"
             text={visitor.currentUrl || "/"}
           />
-          <Detail.Metadata.Label
+          <List.Item.Detail.Metadata.Label
             title="Referrer"
             text={visitor.referrer || "Direct"}
           />
-          <Detail.Metadata.Label
+          <List.Item.Detail.Metadata.Label
             title="Visits"
             text={String(visitor.visitCount ?? 1)}
           />
           {params?.utm_source && (
-            <Detail.Metadata.Label
+            <List.Item.Detail.Metadata.Label
               title="UTM Source"
               text={params.utm_source}
             />
           )}
           {params?.utm_campaign && (
-            <Detail.Metadata.Label
+            <List.Item.Detail.Metadata.Label
               title="UTM Campaign"
               text={params.utm_campaign}
             />
           )}
           {params?.ref && (
-            <Detail.Metadata.Label title="Ref" text={params.ref} />
+            <List.Item.Detail.Metadata.Label title="Ref" text={params.ref} />
           )}
-          <Detail.Metadata.Separator />
+          <List.Item.Detail.Metadata.Separator />
           {score != null && (
-            <Detail.Metadata.TagList title="Conversion Likelihood">
-              <Detail.Metadata.TagList.Item
+            <List.Item.Detail.Metadata.TagList title="Conversion Likelihood">
+              <List.Item.Detail.Metadata.TagList.Item
                 text={`${score}%`}
                 color={conversionColor(score)}
               />
-            </Detail.Metadata.TagList>
+            </List.Item.Detail.Metadata.TagList>
           )}
           {visitor.isCustomer && (
-            <Detail.Metadata.Label
+            <List.Item.Detail.Metadata.Label
               title="Customer"
               text={visitor.customerName || "Yes"}
               icon={Icon.Star}
             />
           )}
-        </Detail.Metadata>
-      }
-      actions={
-        <ActionPanel>
-          <Action.CopyToClipboard
-            title="Copy Current URL"
-            content={visitor.currentUrl || ""}
-          />
-        </ActionPanel>
+        </List.Item.Detail.Metadata>
       }
     />
   );
 }
 
 export default function RealtimeVisitors() {
-  const { data: realtime, isLoading: loadingCount } = usePromise(fetchRealtime);
-  const { data: mapData, isLoading: loadingMap } = usePromise(fetchRealtimeMap);
+  const { data: realtime, isLoading: loadingCount } = useCachedPromise(
+    fetchRealtime,
+    [],
+    { failureToastOptions: { title: "Failed to load realtime count" } },
+  );
+  const { data: mapData, isLoading: loadingMap } = useCachedPromise(
+    fetchRealtimeMap,
+    [],
+    { failureToastOptions: { title: "Failed to load visitor data" } },
+  );
 
   const visitors = mapData?.visitors || [];
   const count = realtime?.visitors ?? visitors.length;
@@ -135,19 +128,18 @@ export default function RealtimeVisitors() {
   return (
     <List
       isLoading={loadingCount || loadingMap}
+      isShowingDetail
       navigationTitle={`${formatNumber(count)} Online`}
       searchBarPlaceholder="Search visitors by location, page, device..."
     >
       <List.Section title={`${formatNumber(count)} Active Visitors`}>
         {visitors.map((v, i) => {
           const score = v.conversionLikelihood?.score;
-          const refSource = v.params?.utm_source || v.params?.ref || v.referrer;
 
           return (
             <List.Item
               key={v.visitorId || i}
               title={visitorLocation(v)}
-              subtitle={v.currentUrl || "/"}
               icon={deviceIcon(v.system?.device?.type)}
               keywords={[
                 v.location?.city,
@@ -158,10 +150,6 @@ export default function RealtimeVisitors() {
                 v.currentUrl,
               ].filter((k): k is string => !!k)}
               accessories={[
-                ...(refSource ? [{ text: refSource, icon: Icon.Link }] : []),
-                ...(v.system?.browser?.name
-                  ? [{ text: v.system.browser.name, icon: Icon.Globe }]
-                  : []),
                 ...(score != null
                   ? [
                       {
@@ -173,19 +161,17 @@ export default function RealtimeVisitors() {
                     ]
                   : []),
               ]}
+              detail={<VisitorDetailMetadata visitor={v} />}
               actions={
                 <ActionPanel>
-                  <Action.Push
-                    title="View Details"
-                    icon={Icon.Eye}
-                    target={<VisitorDetail visitor={v} />}
-                  />
                   <Action.CopyToClipboard
                     title="Copy Page URL"
+                    icon={Icon.Clipboard}
                     content={v.currentUrl || ""}
                   />
                   <Action.OpenInBrowser
                     title="Open Datafast Dashboard"
+                    icon={Icon.Globe}
                     url="https://datafa.st"
                   />
                 </ActionPanel>
@@ -202,11 +188,36 @@ export default function RealtimeVisitors() {
               title={
                 e.type === "pageview" ? `Pageview: ${e.path || "/"}` : e.type
               }
-              subtitle={new Date(e.timestamp).toLocaleTimeString()}
               icon={e.type === "pageview" ? Icon.Globe : Icon.Star}
               accessories={[
                 ...(e.countryCode ? [{ text: e.countryCode }] : []),
               ]}
+              detail={
+                <List.Item.Detail
+                  metadata={
+                    <List.Item.Detail.Metadata>
+                      <List.Item.Detail.Metadata.Label
+                        title="Type"
+                        text={e.type}
+                      />
+                      <List.Item.Detail.Metadata.Label
+                        title="Path"
+                        text={e.path || "/"}
+                      />
+                      <List.Item.Detail.Metadata.Label
+                        title="Time"
+                        text={new Date(e.timestamp).toLocaleTimeString()}
+                      />
+                      {e.countryCode && (
+                        <List.Item.Detail.Metadata.Label
+                          title="Country"
+                          text={e.countryCode}
+                        />
+                      )}
+                    </List.Item.Detail.Metadata>
+                  }
+                />
+              }
             />
           ))}
         </List.Section>
@@ -217,11 +228,32 @@ export default function RealtimeVisitors() {
             <List.Item
               key={`payment-${i}`}
               title={`${p.currency || "$"}${p.amount ?? 0}`}
-              subtitle={new Date(p.timestamp).toLocaleTimeString()}
               icon={Icon.BankNote}
               accessories={[
                 ...(p.customerName ? [{ text: p.customerName }] : []),
               ]}
+              detail={
+                <List.Item.Detail
+                  metadata={
+                    <List.Item.Detail.Metadata>
+                      <List.Item.Detail.Metadata.Label
+                        title="Amount"
+                        text={`${p.currency || "$"}${p.amount ?? 0}`}
+                      />
+                      <List.Item.Detail.Metadata.Label
+                        title="Time"
+                        text={new Date(p.timestamp).toLocaleTimeString()}
+                      />
+                      {p.customerName && (
+                        <List.Item.Detail.Metadata.Label
+                          title="Customer"
+                          text={p.customerName}
+                        />
+                      )}
+                    </List.Item.Detail.Metadata>
+                  }
+                />
+              }
             />
           ))}
         </List.Section>
